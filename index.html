@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beyond Support: Bridging Technology and Customer Needs</title>
+<style>
+  :root {
+    --dd-purple: #632CA6;
+    --dd-purple-light: #7C4DB8;
+    --dd-orange: #FF6B35;
+    --dd-green: #00C2A8;
+    --dd-dark: #1A1A2E;
+    --dd-darker: #0F0F1A;
+    --dd-card: rgba(255,255,255,0.05);
+    --dd-border: rgba(255,255,255,0.1);
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255,255,255,0.7);
+    --text-muted: rgba(255,255,255,0.45);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--dd-darker);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── Slide Container ── */
+  .deck {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 80px;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+
+  .slide.exit {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+
+  /* ── Background patterns ── */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 80% 20%, rgba(99,44,166,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(0,194,168,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* ── Nav ── */
+  .nav {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 100;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--dd-border);
+    border-radius: 40px;
+    padding: 10px 20px;
+  }
+
+  .nav button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+  }
+
+  .nav button:hover { color: white; background: rgba(255,255,255,0.1); }
+  .nav button:disabled { opacity: 0.25; cursor: default; }
+
+  .nav .counter {
+    font-size: 13px;
+    color: var(--text-muted);
+    min-width: 50px;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  .dots {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .dot.active {
+    background: var(--dd-purple);
+    width: 18px;
+    border-radius: 3px;
+  }
+
+  /* ── Slide number badge ── */
+  .slide-badge {
+    position: fixed;
+    top: 28px;
+    right: 36px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    z-index: 100;
+  }
+
+  /* ── DD logo area ── */
+  .dd-logo {
+    position: fixed;
+    top: 28px;
+    left: 36px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+  }
+
+  .dd-logo-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--dd-purple);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    color: white;
+  }
+
+  .dd-logo-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Typography ── */
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dd-orange);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+  }
+
+  h2 {
+    font-size: clamp(24px, 3vw, 38px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+  }
+
+  h3 {
+    font-size: clamp(16px, 1.8vw, 22px);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: clamp(15px, 1.6vw, 20px);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 700px;
+  }
+
+  .highlight { color: var(--dd-purple-light); }
+  .highlight-orange { color: var(--dd-orange); }
+  .highlight-green { color: var(--dd-green); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--dd-card);
+    border: 1px solid var(--dd-border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    backdrop-filter: blur(8px);
+  }
+
+  .card-grid {
+    display: grid;
+    gap: 20px;
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* ── Tag chips ── */
+  .tag {
+    display: inline-block;
+    background: rgba(99,44,166,0.25);
+    border: 1px solid rgba(99,44,166,0.5);
+    color: #C4A8F0;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .tag-green {
+    background: rgba(0,194,168,0.15);
+    border-color: rgba(0,194,168,0.4);
+    color: #7FFFED;
+  }
+
+  .tag-orange {
+    background: rgba(255,107,53,0.15);
+    border-color: rgba(255,107,53,0.4);
+    color: #FFAA84;
+  }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+  /* ── Problem / Insight / Direction blocks ── */
+  .pid-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 8px;
+  }
+
+  .pid-block {
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+
+  .pid-block.problem {
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.25);
+  }
+
+  .pid-block.insight {
+    background: rgba(99,44,166,0.12);
+    border: 1px solid rgba(99,44,166,0.35);
+  }
+
+  .pid-block.direction {
+    background: rgba(0,194,168,0.08);
+    border: 1px solid rgba(0,194,168,0.3);
+  }
+
+  .pid-label {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .pid-block.problem .pid-label { color: var(--dd-orange); }
+  .pid-block.insight .pid-label { color: #C4A8F0; }
+  .pid-block.direction .pid-label { color: var(--dd-green); }
+
+  .pid-block ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .pid-block ul li {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    padding: 4px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .pid-block ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--text-muted);
+  }
+
+  /* ── Strength items ── */
+  .strength-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: var(--dd-card);
+    border: 1px solid var(--dd-border);
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .strength-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(99,44,166,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .strength-text {
+    font-size: 15px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ── Quote block ── */
+  .quote-block {
+    border-left: 3px solid var(--dd-purple);
+    padding: 16px 24px;
+    background: rgba(99,44,166,0.08);
+    border-radius: 0 12px 12px 0;
+    font-size: 17px;
+    font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 800px;
+    margin: 24px 0;
+  }
+
+  /* ── Award / achievement item ── */
+  .award-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: 10px;
+    background: var(--dd-card);
+    border: 1px solid var(--dd-border);
+    margin-bottom: 10px;
+  }
+
+  .award-badge {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .award-content { flex: 1; }
+  .award-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .award-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ── Section divider ── */
+  .divider {
+    width: 48px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--dd-purple), var(--dd-orange));
+    border-radius: 2px;
+    margin: 16px 0;
+  }
+
+  /* ── Title slide specific ── */
+  .title-slide-content {
+    text-align: center;
+    max-width: 900px;
+  }
+
+  .title-slide-content h1 {
+    background: linear-gradient(135deg, #FFFFFF 0%, rgba(255,255,255,0.7) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+  }
+
+  /* ── Project item ── */
+  .project-item {
+    border-radius: 12px;
+    padding: 22px 26px;
+    background: var(--dd-card);
+    border: 1px solid var(--dd-border);
+  }
+
+  .project-item h3 { color: var(--text-primary); font-size: 15px; margin-bottom: 8px; }
+  .project-item p { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .project-item .arrow-note {
+    font-size: 12px;
+    color: var(--dd-green);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--dd-border);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .slide { padding: 40px 28px; }
+    .card-grid.cols-2, .card-grid.cols-3 { grid-template-columns: 1fr; }
+    .pid-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Progress bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--dd-purple), var(--dd-orange));
+    transition: width 0.4s ease;
+    z-index: 200;
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="slide-badge" id="slideBadge">1 / 5</div>
+
+<div class="deck" id="deck">
+
+  <!-- ── SLIDE 1: Title ── -->
+  <div class="slide active" data-slide="1">
+    <div class="title-slide-content">
+      <div class="eyebrow">Cloud Infrastructure Problem Solver</div>
+      <h1>Beyond Support:<br>Bridging Technology<br>and Customer Needs</h1>
+      <div class="divider" style="margin: 24px auto;"></div>
+      <div class="tags" style="justify-content: center; margin-top: 28px;">
+        <span class="tag">Cloud Architecting</span>
+        <span class="tag">Networking</span>
+        <span class="tag">AI</span>
+        <span class="tag">Technical Communication</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 2: The Gap ── -->
+  <div class="slide" data-slide="2">
+    <div style="max-width: 1000px; width: 100%;">
+      <div class="eyebrow">What I want to solve</div>
+      <h2>The gap is not <span class="highlight">technology availability</span>,<br>but contextual usage in real environments</h2>
+      <div class="divider"></div>
+      <div class="card-grid cols-2" style="margin-top: 8px;">
+
+        <div class="card" style="border-top: 2px solid var(--dd-orange); padding: 24px 28px;">
+          <div class="eyebrow" style="color: var(--dd-orange); margin-bottom: 8px;">Problem 1</div>
+          <h3 style="color: white; font-size: 17px; margin-bottom: 12px;">Network Troubleshooting Complexity</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.7;">
+            Multi-layer network issues with no end-to-end guided visibility. Firewall, NSG, Switch ACL, Routing, Load Balancer — but no unified flow.
+          </p>
+          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,107,53,0.25); display: flex; gap: 10px; align-items: flex-start;">
+            <span style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: var(--dd-green); white-space: nowrap; margin-top: 2px;">Direction</span>
+            <p style="font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.65;">
+              In modern observability platforms (e.g., Datadog Network Path Visualization / Service Map), this can be addressed through end-to-end traffic flow mapping and cross-layer correlation for faster root cause identification.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="border-top: 2px solid var(--dd-purple-light); padding: 24px 28px;">
+          <div class="eyebrow" style="margin-bottom: 8px;">Problem 2</div>
+          <h3 style="color: white; font-size: 17px; margin-bottom: 12px;">Service & Configuration Complexity</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.7;">
+            Architecture intent is clear, but execution becomes fragmented due to unclear service selection and design decisions.
+          </p>
+          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(99,44,166,0.3); display: flex; gap: 10px; align-items: flex-start;">
+            <span style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: var(--dd-green); white-space: nowrap; margin-top: 2px;">Direction</span>
+            <p style="font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.65;">
+              Establish standardized reference architectures and decision frameworks to guide service selection and configuration, reducing fragmentation in design execution and ensuring consistent, repeatable cloud architecture patterns across teams.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 3: Technical ── -->
+  <div class="slide" data-slide="3">
+    <div style="max-width: 1100px; width: 100%; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center;">
+      <div>
+        <div class="eyebrow">Core Strength 01</div>
+        <h2>Network & Architeucture Expertise</h2>
+        <div class="divider"></div>
+        <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 20px;">
+          <div>
+            <div class="pid-label" style="color: var(--dd-orange); margin-bottom: 10px;">Network Engineering</div>
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <div style="display: flex; gap: 10px; align-items: flex-start;">
+                <span style="color: var(--dd-orange); flex-shrink: 0; margin-top: 1px;">›</span>
+                <span style="font-size: 14px; color: var(--text-secondary); line-height: 1.5;">Hybrid / Multi-Cloud environment design spanning On-premise, AWS, and Azure</span>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: flex-start;">
+                <span style="color: var(--dd-orange); flex-shrink: 0; margin-top: 1px;">›</span>
+                <span style="font-size: 14px; color: var(--text-secondary); line-height: 1.5;">IPSec VPN and dedicated leased line technical support</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="pid-label" style="color: #C4A8F0; margin-bottom: 10px;">Cloud Architecture</div>
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <div style="display: flex; gap: 10px; align-items: flex-start;">
+                <span style="color: #C4A8F0; flex-shrink: 0; margin-top: 1px;">›</span>
+                <span style="font-size: 14px; color: var(--text-secondary); line-height: 1.5;">DMZ Zone design separating public internet access from internal private network</span>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: flex-start;">
+                <span style="color: #C4A8F0; flex-shrink: 0; margin-top: 1px;">›</span>
+                <span style="font-size: 14px; color: var(--text-secondary); line-height: 1.5;">Security architecture design using WAF, Firewall, and NSG</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tags" style="margin-top: 22px;">
+          <span class="tag">Azure</span>
+          <span class="tag">AWS</span>
+          <span class="tag">On-Premise</span>
+          <span class="tag">IPSec VPN</span>
+          <span class="tag">WAF</span>
+          <span class="tag">NSG</span>
+          <span class="tag">DMZ</span>
+        </div>
+      </div>
+
+      <!-- Network Architecture SVG -->
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <svg viewBox="0 0 380 300" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-width:380px;">
+          <circle cx="190" cy="150" r="120" fill="rgba(99,44,166,0.05)"/>
+
+          <!-- ON-PREM box -->
+          <rect x="10" y="105" width="95" height="72" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+          <text x="57" y="123" font-size="10" fill="rgba(255,255,255,0.6)" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="600">On-Prem</text>
+          <rect x="26" y="132" width="63" height="5" rx="2" fill="rgba(255,255,255,0.15)"/>
+          <rect x="26" y="141" width="47" height="5" rx="2" fill="rgba(255,255,255,0.09)"/>
+          <rect x="26" y="150" width="55" height="5" rx="2" fill="rgba(255,255,255,0.09)"/>
+          <text x="57" y="172" font-size="8" fill="rgba(255,255,255,0.3)" text-anchor="middle" font-family="system-ui,sans-serif">Server</text>
+
+          <!-- AZURE cloud -->
+          <ellipse cx="316" cy="78" rx="58" ry="36" fill="rgba(99,44,166,0.18)" stroke="rgba(124,77,184,0.55)" stroke-width="1.5"/>
+          <text x="316" y="74" font-size="11" fill="#C4A8F0" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="700">Azure</text>
+          <text x="316" y="89" font-size="7.5" fill="rgba(196,168,240,0.55)" text-anchor="middle" font-family="system-ui,sans-serif">NSG · Firewall · WAF</text>
+
+          <!-- AWS cloud -->
+          <ellipse cx="316" cy="222" rx="58" ry="36" fill="rgba(255,107,53,0.12)" stroke="rgba(255,107,53,0.45)" stroke-width="1.5"/>
+          <text x="316" y="218" font-size="11" fill="#FFAA84" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="700">AWS</text>
+          <text x="316" y="233" font-size="7.5" fill="rgba(255,170,132,0.55)" text-anchor="middle" font-family="system-ui,sans-serif">EC2 · VPC · Security Group</text>
+
+          <!-- Central Firewall / DMZ -->
+          <circle cx="190" cy="150" r="38" fill="rgba(0,194,168,0.07)" stroke="rgba(0,194,168,0.35)" stroke-width="1.5"/>
+          <path d="M190 132 L204 138 L204 153 C204 162 190 169 190 169 C190 169 176 162 176 153 L176 138 Z" fill="rgba(0,194,168,0.2)" stroke="#00C2A8" stroke-width="1.5"/>
+          <text x="190" y="184" font-size="8" fill="rgba(0,194,168,0.8)" text-anchor="middle" font-family="system-ui,sans-serif">Firewall</text>
+          <text x="190" y="195" font-size="8" fill="rgba(0,194,168,0.55)" text-anchor="middle" font-family="system-ui,sans-serif">DMZ Zone</text>
+
+          <!-- Line: On-Prem → Firewall -->
+          <line x1="105" y1="141" x2="152" y2="148" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <rect x="104" y="126" width="42" height="14" rx="3" fill="rgba(255,107,53,0.12)" stroke="rgba(255,107,53,0.3)" stroke-width="1"/>
+          <text x="125" y="136" font-size="7.5" fill="#FFAA84" text-anchor="middle" font-family="system-ui,sans-serif">IPSec VPN</text>
+          <rect x="104" y="144" width="42" height="13" rx="3" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+          <text x="125" y="153" font-size="7.5" fill="rgba(255,255,255,0.35)" text-anchor="middle" font-family="system-ui,sans-serif">Leased Line</text>
+
+          <!-- Line: Azure → Firewall -->
+          <line x1="259" y1="96" x2="222" y2="127" stroke="rgba(124,77,184,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <!-- Line: AWS → Firewall -->
+          <line x1="259" y1="205" x2="222" y2="174" stroke="rgba(255,107,53,0.25)" stroke-width="1.5" stroke-dasharray="5,3"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 4: Technical Communication ── -->
+  <div class="slide" data-slide="4">
+    <div style="max-width: 1100px; width: 100%; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center;">
+      <div>
+        <div class="eyebrow">Core Strength 02</div>
+        <h2>Technical<br><span class="highlight">Communicator</span></h2>
+        <div class="divider"></div>
+        <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 11px;">
+          <div class="award-item">
+            <div class="award-badge">🎤</div>
+            <div class="award-content">
+              <div class="award-title">Business Proposal Presentation</div>
+              <div class="award-sub">Cloud adoption proposal for Hyundai AutoEver US — 90-minute session</div>
+            </div>
+          </div>
+          <div class="award-item">
+            <div class="award-badge">🎓</div>
+            <div class="award-content">
+              <div class="award-title">Educational Speaker</div>
+              <div class="award-sub">Delivered 20+ major introduction lectures to middle and high school students during university</div>
+            </div>
+          </div>
+          <div class="award-item">
+            <div class="award-badge">🏆</div>
+            <div class="award-content">
+              <div class="award-title">Grand Prize</div>
+              <div class="award-sub">Cloud Infrastructure Engineer Training Program — Final Project Presentation</div>
+            </div>
+          </div>
+          <div class="award-item">
+            <div class="award-badge">🥇</div>
+            <div class="award-content">
+              <div class="award-title">1st Prize</div>
+              <div class="award-sub">4th Revolution SW Basic Competency Academy — Final Project</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Images: slide 4 -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 100%; align-self: center;">
+
+        <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1.5px dashed rgba(255,255,255,0.18); background: rgba(255,255,255,0.03); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+          <img src="img/slide4-img1.jpg" alt="Slide 4 Image 1"
+               style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 11px;"
+               onerror="this.style.display='none'"
+               onload="this.nextElementSibling.style.display='none'"/>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="opacity:0.2"><rect x="3" y="3" width="18" height="18" rx="3" stroke="white" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="white"/><path d="M21 15l-5-5L5 21" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="font-size: 10px; color: rgba(255,255,255,0.22); letter-spacing: 0.5px; font-family: monospace;">img/slide4-img1.jpg</span>
+          </div>
+        </div>
+
+        <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1.5px dashed rgba(255,255,255,0.18); background: rgba(255,255,255,0.03); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+          <img src="img/slide4-img2.jpg" alt="Slide 4 Image 2"
+               style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 11px;"
+               onerror="this.style.display='none'"
+               onload="this.nextElementSibling.style.display='none'"/>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="opacity:0.2"><rect x="3" y="3" width="18" height="18" rx="3" stroke="white" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="white"/><path d="M21 15l-5-5L5 21" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="font-size: 10px; color: rgba(255,255,255,0.22); letter-spacing: 0.5px; font-family: monospace;">img/slide4-img2.jpg</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 5: AI & Problem Solver ── -->
+  <div class="slide" data-slide="5">
+    <div style="max-width: 1100px; width: 100%; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center;">
+      <div>
+        <div class="eyebrow">Core Strength 03</div>
+        <h2>AI-Driven &<br><span class="highlight-green">Problem Solving</span></h2>
+        <div class="divider"></div>
+        <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 11px;">
+          <div class="project-item">
+            <h3>Excel History Automation</h3>
+            <p>Automated the repetitive manual process of tracking operation history in Excel using AI tools</p>
+          </div>
+          <div class="project-item">
+            <h3>Azure AI Agent (MCP)</h3>
+            <p>While working as an Azure Engineer, identified hallucination issues in ChatGPT/Gemini → Built a dedicated Azure AI Agent grounded in official docs via Microsoft Learn MCP Server</p>
+            <div class="arrow-note">→ Significantly reduced hallucinations by anchoring responses to official Azure documentation</div>
+          </div>
+          <div class="project-item">
+            <h3>English Speaking Review App</h3>
+            <p>MP3 upload → Speech-to-Text + natural English expression refinement pipeline. Built via vibe coding with Google AI Studio</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Images: slide 5 -->
+      <div style="display: flex; flex-direction: column; gap: 14px; width: 100%; align-self: center;">
+
+        <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1.5px dashed rgba(255,255,255,0.18); background: rgba(255,255,255,0.03); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+          <img src="img/slide5-img1.jpg" alt="Slide 5 Image 1"
+               style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 11px;"
+               onerror="this.style.display='none'"
+               onload="this.nextElementSibling.style.display='none'"/>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="opacity:0.2"><rect x="3" y="3" width="18" height="18" rx="3" stroke="white" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="white"/><path d="M21 15l-5-5L5 21" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="font-size: 10px; color: rgba(255,255,255,0.22); letter-spacing: 0.5px; font-family: monospace;">img/slide5-img1.jpg</span>
+          </div>
+        </div>
+
+        <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1.5px dashed rgba(255,255,255,0.18); background: rgba(255,255,255,0.03); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+          <img src="img/slide5-img2.jpg" alt="Slide 5 Image 2"
+               style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 11px;"
+               onerror="this.style.display='none'"
+               onload="this.nextElementSibling.style.display='none'"/>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="opacity:0.2"><rect x="3" y="3" width="18" height="18" rx="3" stroke="white" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="white"/><path d="M21 15l-5-5L5 21" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="font-size: 10px; color: rgba(255,255,255,0.22); letter-spacing: 0.5px; font-family: monospace;">img/slide5-img2.jpg</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- Nav -->
+<div class="nav">
+  <button id="prevBtn" onclick="navigate(-1)" disabled>&#8592;</button>
+  <div class="dots" id="dots"></div>
+  <span class="counter" id="counter">1 / 5</span>
+  <button id="nextBtn" onclick="navigate(1)">&#8594;</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  const dotsEl = document.getElementById('dots');
+  const counterEl = document.getElementById('counter');
+  const badgeEl = document.getElementById('slideBadge');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const progress = document.getElementById('progressBar');
+
+  // Build dots
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  function goTo(index) {
+    slides[current].classList.remove('active');
+    slides[current].classList.add('exit');
+    setTimeout(() => slides[current].classList.remove('exit'), 450);
+
+    current = index;
+    slides[current].classList.add('active');
+
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+    counterEl.textContent = `${current + 1} / ${total}`;
+    badgeEl.textContent = `${current + 1} / ${total}`;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    progress.style.width = `${((current + 1) / total) * 100}%`;
+  }
+
+  function navigate(dir) {
+    const next = current + dir;
+    if (next < 0 || next >= total) return;
+    goTo(next);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') navigate(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate(-1);
+  });
+
+  // Touch swipe
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const dx = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 40) navigate(dx > 0 ? 1 : -1);
+  });
+
+  // Init progress
+  progress.style.width = `${(1 / total) * 100}%`;
+</script>
+
+</body>
+</html>
